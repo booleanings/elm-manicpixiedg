@@ -22,17 +22,27 @@ main =
 
 
 type alias Model =
-  { hairColor : String
+  { hairColor : String,
+    age : Int
   }
 
 
 init : () -> (Model, Cmd Msg)
 init _ =
-  ( Model ""
+  ( Model "" 0
   , Cmd.none
   )
 
 colors=["blue", "pink", "red", "green"]
+-- yay did this two different ways!!
+extractColor pos = 
+    let colorMaybe = ( List.head ( List.drop (pos-1) ( List.take (pos) colors ) ))
+    in
+    case colorMaybe of
+        Nothing -> "Hello darkness my old friend"
+        Just val ->
+            val
+    -- Maybe.withDefault "No val" ( List.head ( List.drop (pos-1) ( List.take (pos) colors ) )) -- -> "black"
 
 
 -- UPDATE
@@ -40,23 +50,29 @@ colors=["blue", "pink", "red", "green"]
 
 type Msg
   = Roll
-  | NewColor Int
+  | NewGirl (Int, Int)
+  | NewAge Int
 
-extractColor pos = 
-    Maybe.withDefault "No val" ( List.head ( List.drop (pos-1) ( List.take (pos) colors ) )) -- -> "black"
 
+point : Random.Generator (Int, Int)
+point =
+      Random.pair (Random.int 1 4) (Random.int 18 41)
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
     Roll ->
       ( model
-      , Random.generate NewColor (Random.int 1 4)
+      , Random.generate NewGirl point
       )
 
-    NewColor randomNum ->
-      ( Model ( extractColor randomNum )
+    NewGirl twoNums ->
+      ( Model ( extractColor (Tuple.first twoNums) ) (Tuple.second twoNums)
       , Cmd.none
       )
+
+    NewAge randomNum ->
+      ( Model model.hairColor randomNum
+      , Cmd.none)
 
 
 
@@ -76,5 +92,6 @@ view : Model -> Html Msg
 view model =
   div []
     [ h1 [] [ text ( model.hairColor ) ]
+    , h1 [] [ text ( String.fromInt model.age ) ]
     , button [ onClick Roll ] [ text "Roll" ]
     ]
