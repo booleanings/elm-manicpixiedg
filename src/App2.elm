@@ -51,7 +51,6 @@ extractColor pos =
 type Msg
   = Roll
   | NewGirl (Int, Int)
-  | NewAge Int
 
 
 point : Random.Generator (Int, Int)
@@ -69,10 +68,6 @@ update msg model =
       ( Model ( extractColor (Tuple.first twoNums) ) (Tuple.second twoNums)
       , Cmd.none
       )
-
-    NewAge randomNum ->
-      ( Model model.hairColor randomNum
-      , Cmd.none)
 
 
 
