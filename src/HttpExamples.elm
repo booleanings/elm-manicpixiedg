@@ -3,7 +3,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Http
-import Json.Decode exposing (Decoder, field, string, index, list)
+import Json.Decode exposing (Decoder, field, string, index, list, map2)
 
 
 
@@ -26,7 +26,7 @@ main =
 type Model
   = Failure
   | Loading
-  | Success String
+  | Success Girl
 
 
 init : () -> (Model, Cmd Msg)
@@ -40,7 +40,7 @@ init _ =
 
 type Msg
   = MorePlease
-  | GotName (Result Http.Error String)
+  | GotName (Result Http.Error Girl)
 
 
 update : Msg -> Model -> (Model, Cmd Msg)
@@ -51,8 +51,8 @@ update msg model =
 
     GotName result ->
       case result of
-        Ok url ->
-          (Success url, Cmd.none)
+        Ok girl ->
+          (Success girl, Cmd.none)
 
         Err _ ->
           (Failure, Cmd.none)
@@ -91,10 +91,11 @@ viewGif model =
     Loading ->
       text "Loading..."
 
-    Success url ->
+    Success girl ->
       div []
         [ button [ onClick MorePlease, style "display" "block" ] [ text "More Please!" ]
-        , h2 [] [ text url ]
+        , h2 [] [ text girl.firstName ]
+        , h2 [] [ text girl.lastName ]
         ]
 
 
@@ -109,7 +110,12 @@ getRandomNames =
     , expect = Http.expectJson GotName ( nameDecoder)
     }
 
-
-nameDecoder : Decoder String
+type alias Girl =
+  { firstName : String
+  , lastName : String
+  }
+nameDecoder : Decoder Girl
 nameDecoder =
-    field "results" ( index 0 (field "name" (field "first" string))  )
+  map2 Girl
+      ( field "results" ( index 0 (field "name" (field "first" string))  ) )
+      ( field "results" ( index 0 (field "name" (field "last" string))  ) )
