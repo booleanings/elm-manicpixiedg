@@ -1,4 +1,4 @@
-module Main exposing (Girl, Model, Msg(..), State(..), extractColor, generatedInt, generatedPair, getRandomNames, init, main, nameDecoder, possibleEyeColors, possibleHairColors, returnMP, subscriptions, update, view, viewGirl)
+module Combined exposing (Model, State(..), init, main, returnMP, subscriptions, update, view, viewGirl)
 
 import Browser
 import Html exposing (..)
@@ -14,8 +14,9 @@ import Bootstrap.Card.Block as Block
 import Bootstrap.Card as Card
 import Bootstrap.ListGroup as ListGroup
 import Bootstrap.Button as Button
--- MAIN
-import Drawing as Girl
+import RandomUtils exposing (..)
+import GirlDrawing as GirlDrawing
+import Rest exposing (Girl, Msg(..), getRandomNames, getRandomQuote, nameDecoder)
 
 main =
     Browser.element
@@ -28,7 +29,7 @@ main =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( Model "" "" "" "" 0 "" Loading, Random.generate SetFeatures generatedPair )
+    ( Model "" "" "" "" 0 "" "" "" Loading, Random.generate SetFeatures generatedPair )
 
 
 
@@ -42,6 +43,8 @@ type alias Model =
     , eyeColor : String
     , age : Int
     , firstWords : String
+    , city : String
+    , state : String
     , status : State
     }
 
@@ -53,106 +56,15 @@ type State
 
 
 
--- UPDATE
--- color picker helper
 
-
-possibleHairColors =
-    [ "blue", "pink", "red", "green" ]
-
-
-possibleEyeColors =
-    [ "black", "brown", "hazel", "green", "blue" ]
-
-
-extractColor pos list =
-    Maybe.withDefault "black" (List.head (List.drop (pos - 1) (List.take pos list)))
-
-
-
--- -> "black"
--- random generated helper
-
-
-generatedPair : Random.Generator ( Int, Int )
-generatedPair =
-    Random.pair (Random.int 1 4) (Random.int 1 5)
-
-
-generatedInt : Random.Generator Int
-generatedInt =
-    Random.int 18 41
-
-
--- getRandomNames Http get command
-
-
-getRandomQuote : Cmd Msg
-getRandomQuote =
-    Http.get
-        { url = "https://favqs.com/api/qotd"
-
-        -- { url = "http://localhost:8001/data/names.json"
-        , expect = Http.expectJson GotQuote quoteDecoder
-        }
-
-
-quoteDecoder : Decoder String
-quoteDecoder =
-    (field "quote" (field "body" string))
-
-
-
--- getRandomNames Http get command
-
-
-getRandomNames : Cmd Msg
-getRandomNames =
-    Http.get
-        { url = "https://randomuser.me/api/?gender=female"
-
-        -- { url = "http://localhost:8001/data/names.json"
-        , expect = Http.expectJson GotName nameDecoder
-        }
-
-
-type alias Girl =
-    { firstName : String
-    , lastName : String
-    }
-
-
-nameDecoder : Decoder Girl
-nameDecoder =
-    map2 Girl
-        (field "results" (index 0 (field "name" (field "first" string))))
-        (field "results" (index 0 (field "name" (field "last" string))))
-
-
-
--- helper function to take in a Girl and Return a ManicPixieDG.
-
-
-returnMP : Girl -> Model -> Model
+returnMP : Rest.Girl -> Model -> Model
 returnMP gorl model =
-    Model gorl.firstName gorl.lastName model.hairColor model.eyeColor model.age model.firstWords Success
+    Model gorl.firstName gorl.lastName model.hairColor model.eyeColor model.age model.firstWords gorl.city gorl.state Success
+
 
 
 
 -- updateupdate
-
-
-type Msg
-    = MorePlease
-    | RollFeatures
-    | RollAge
-    | SetFeatures ( Int, Int )
-    | SetAge Int
-    | GotName (Result Http.Error Girl)
-    | GotQuote (Result Http.Error String)
-    | ChainMsgs (List Msg)
-
-
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
@@ -197,12 +109,12 @@ update msg model =
             )
 
         SetFeatures twoNums ->
-            ( Model model.firstName model.lastName (extractColor (Tuple.first twoNums) possibleHairColors) (extractColor (Tuple.second twoNums) possibleEyeColors) (Tuple.second twoNums) "" Success
+            ( Model model.firstName model.lastName (extractColor (Tuple.first twoNums) possibleHairColors) (extractColor (Tuple.second twoNums) possibleEyeColors) (Tuple.second twoNums) "" model.city model.state Success
             , getRandomNames
             )
 
         SetAge age ->
-            ( Model model.firstName model.lastName model.hairColor model.eyeColor age "" Success
+            ( Model model.firstName model.lastName model.hairColor model.eyeColor age "" model.city model.state Success
             , getRandomNames
             )
 
@@ -244,26 +156,20 @@ viewGirl model =
             Grid.containerFluid []
                 [ Grid.row []
                     [ Grid.col
-                        [ Col.xs, Col.md8 ]
-                        [ text ("name: " ++ model.firstName ++ " " ++ model.lastName)
+                        [  ]
+                        [ h1 [style "font-family" "Rubik"] [text ("name: " ++ model.firstName ++ " " ++ model.lastName)]
                         , br [] []
-                        , text ("age: " ++ String.fromInt model.age)]
+                        , text ("age: " ++ String.fromInt model.age)
+                        , br [] []
+                        , text ("location: " ++ model.city ++ ", " ++ model.state)]
                     , Grid.col
-                        [ Col.xs6, Col.md4 ]
-                        [ Girl.drawing model.eyeColor model.hairColor]
+                        [ ]
+                        [ GirlDrawing.drawing model.eyeColor model.hairColor]
                     ]
                 ]
             ]
                 |> Card.listGroup
                     [ ListGroup.li [ ListGroup.warning ] [ text ("first words: " ++ model.firstWords) ]]
-                    -- [
-                    --     Grid.container []
-                    --         [ Grid.row []
-                    --          [ Grid.col [ Col.sm8 ] [ text "col-sm-8" ]
-                    --          , Grid.col [ Col.sm4] [ text "col-sm-4" ]
-                    --           ]
-                    --         ]
-                    -- ]
                 |> Card.block []
                     [ Block.custom <|
                         Button.linkButton

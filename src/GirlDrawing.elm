@@ -1,4 +1,4 @@
-module Drawing exposing (drawing)
+module GirlDrawing exposing (drawing)
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
 
