@@ -21,21 +21,12 @@ main =
 
 init : () -> (Model, Cmd Msg)
 init _ =
-  (Model "" "" "" "" 0 Loading, Random.generate NewGirl generatedPair)
+  (Model "" "" "" "" 0 Loading, Random.generate SetFeatures generatedPair)
 
 
 -- MODEL
 
 type alias Model =
-  { firstName : String
-  , lastName : String
-  , hairColor : String
-  , eyeColor : String
-  , age : Int
-  , status: State
-  }
-
-type alias ManicPixieDG =
   { firstName : String
   , lastName : String
   , hairColor : String
@@ -61,7 +52,10 @@ extractColor pos list =
 -- random generated helper
 generatedPair : Random.Generator (Int, Int)
 generatedPair =
-      Random.pair (Random.int 1 4) (Random.int 18 41)
+      Random.pair (Random.int 1 4) (Random.int 1 5)
+generatedInt : Random.Generator Int
+generatedInt =
+      Random.int 18 41
 
 -- getRandomNames Http get command
 getRandomNames : Cmd Msg
@@ -84,16 +78,18 @@ nameDecoder =
       ( field "results" ( index 0 (field "name" (field "last" string))  ) )
 
 -- helper function to take in a Girl and Return a ManicPixieDG.
-returnMP : Girl -> Model -> ManicPixieDG
-returnMP gorl model = ManicPixieDG gorl.firstName gorl.lastName model.hairColor model.eyeColor model.age Success
+returnMP : Girl -> Model -> Model
+returnMP gorl model = Model gorl.firstName gorl.lastName model.hairColor model.eyeColor model.age Success
 -- updateupdate
 
 
 
 type Msg
   = MorePlease
-  | Roll
-  | NewGirl (Int, Int)
+  | RollFeatures
+  | RollAge
+  | SetFeatures (Int, Int)
+  | SetAge (Int)
   | GotName (Result Http.Error Girl)
   | ChainMsgs (List Msg)
 
@@ -118,13 +114,23 @@ update msg model =
         Err _ ->
           ( {model | status = Failure}, Cmd.none)
 
-    Roll ->
+    RollFeatures ->
       ( model
-      , Random.generate NewGirl generatedPair
+      , Random.generate SetFeatures generatedPair
       )
 
-    NewGirl twoNums ->
-      (  Model model.firstName model.lastName ( extractColor (Tuple.first twoNums) possibleHairColors ) "" (Tuple.second twoNums)  Success
+    RollAge ->
+      ( model
+      , Random.generate SetAge generatedInt
+      )
+
+    SetFeatures twoNums ->
+      (  Model model.firstName model.lastName ( extractColor (Tuple.first twoNums) possibleHairColors ) ( extractColor (Tuple.second twoNums) possibleEyeColors ) (Tuple.second twoNums)  Success
+      , getRandomNames
+      )
+
+    SetAge age ->
+      (  Model model.firstName model.lastName model.hairColor model.eyeColor age Success
       , getRandomNames
       )
 
@@ -134,7 +140,7 @@ update msg model =
 view : Model -> Html Msg
 view model =
   div []
-    [ h2 [] [ text "Random Cats" ]
+    [ h2 [] [ text "ManicPixieDreamGirl Generator" ]
     , viewGirl model
     ]
 
@@ -153,12 +159,12 @@ viewGirl model =
 
     Success ->
       div []
-        [ button [ onClick MorePlease, style "display" "block" ] [ text "More Please!" ]
-        , h1 [] [ text ( "hairColor: " ++ model.hairColor ) ]
+        [ h1 [] [ text ( "hairColor: " ++ model.hairColor ) ]
         , h1 [] [ text ( "age: " ++ String.fromInt model.age ) ]
-        , h2 [] [ text model.firstName ]
-        , h2 [] [ text model.lastName ]
-        , button [  onClick (ChainMsgs [Roll, MorePlease]) ] [ text "Roll" ]
+        , h1 [] [ text ( "eye color: " ++ model.eyeColor ) ]
+        , h2 [] [ text ( "first name: " ++ model.firstName ) ]
+        , h2 [] [ text ( "last name: " ++ model.lastName ) ]
+        , button [  onClick (ChainMsgs [RollAge, RollFeatures, MorePlease]) ] [ text "RollFeatures" ]
         ]
 
 
