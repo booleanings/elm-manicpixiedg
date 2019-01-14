@@ -1,3 +1,5 @@
+module Main exposing (Model, Msg(..), colors, extractColor, generatedPair, init, main, subscriptions, update, view)
+
 import Browser
 import Html exposing (..)
 import Html.Events exposing (..)
@@ -9,12 +11,12 @@ import Random
 
 
 main =
-  Browser.element
-    { init = init
-    , update = update
-    , subscriptions = subscriptions
-    , view = view
-    }
+    Browser.element
+        { init = init
+        , update = update
+        , subscriptions = subscriptions
+        , view = view
+        }
 
 
 
@@ -22,53 +24,66 @@ main =
 
 
 type alias Model =
-  { hairColor : String,
-    age : Int
-  }
+    { hairColor : String
+    , age : Int
+    }
 
 
-init : () -> (Model, Cmd Msg)
+init : () -> ( Model, Cmd Msg )
 init _ =
-  ( Model "" 0
-  , Cmd.none
-  )
+    ( Model "" 0
+    , Cmd.none
+    )
 
-colors=["blue", "pink", "red", "green"]
+
+colors =
+    [ "blue", "pink", "red", "green" ]
+
+
+
 -- yay did this two different ways!!
+
+
 extractColor pos =
-    let colorMaybe = ( List.head ( List.drop (pos-1) ( List.take (pos) colors ) ))
+    let
+        colorMaybe =
+            List.head (List.drop (pos - 1) (List.take pos colors))
     in
     case colorMaybe of
-        Nothing -> "Hello darkness my old friend"
+        Nothing ->
+            "Hello darkness my old friend"
+
         Just val ->
             val
-    -- Maybe.withDefault "No val" ( List.head ( List.drop (pos-1) ( List.take (pos) colors ) )) -- -> "black"
 
 
+
+-- Maybe.withDefault "No val" ( List.head ( List.drop (pos-1) ( List.take (pos) colors ) )) -- -> "black"
 -- UPDATE
 
 
 type Msg
-  = Roll
-  | NewGirl (Int, Int)
+    = Roll
+    | NewGirl ( Int, Int )
 
 
-generatedPair : Random.Generator (Int, Int)
+generatedPair : Random.Generator ( Int, Int )
 generatedPair =
-      Random.pair (Random.int 1 4) (Random.int 18 41)
+    Random.pair (Random.int 1 4) (Random.int 18 41)
 
-update : Msg -> Model -> (Model, Cmd Msg)
+
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-  case msg of
-    Roll ->
-      ( model
-      , Random.generate NewGirl generatedPair
-      )
+    case msg of
+        Roll ->
+            ( model
+            , Random.generate NewGirl generatedPair
+            )
 
-    NewGirl twoNums ->
-      ( Model ( extractColor (Tuple.first twoNums) ) (Tuple.second twoNums)
-      , Cmd.none
-      )
+        NewGirl twoNums ->
+            ( Model (extractColor (Tuple.first twoNums)) (Tuple.second twoNums)
+            , Cmd.none
+            )
 
 
 
@@ -77,7 +92,7 @@ update msg model =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-  Sub.none
+    Sub.none
 
 
 
@@ -86,8 +101,8 @@ subscriptions model =
 
 view : Model -> Html Msg
 view model =
-  div []
-    [ h1 [] [ text ( "hairColor: " ++ model.hairColor ) ]
-    , h1 [] [ text ( "age: " ++ String.fromInt model.age ) ]
-    , button [ onClick Roll ] [ text "Roll" ]
-    ]
+    div []
+        [ h1 [] [ text ("hairColor: " ++ model.hairColor) ]
+        , h1 [] [ text ("age: " ++ String.fromInt model.age) ]
+        , button [ onClick Roll ] [ text "Roll" ]
+        ]
