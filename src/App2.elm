@@ -35,7 +35,7 @@ init _ =
 
 colors=["blue", "pink", "red", "green"]
 -- yay did this two different ways!!
-extractColor pos = 
+extractColor pos =
     let colorMaybe = ( List.head ( List.drop (pos-1) ( List.take (pos) colors ) ))
     in
     case colorMaybe of
@@ -53,15 +53,16 @@ type Msg
   | NewGirl (Int, Int)
 
 
-point : Random.Generator (Int, Int)
-point =
+generatedPair : Random.Generator (Int, Int)
+generatedPair =
       Random.pair (Random.int 1 4) (Random.int 18 41)
+
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
     Roll ->
       ( model
-      , Random.generate NewGirl point
+      , Random.generate NewGirl generatedPair
       )
 
     NewGirl twoNums ->
@@ -86,7 +87,7 @@ subscriptions model =
 view : Model -> Html Msg
 view model =
   div []
-    [ h1 [] [ text ( model.hairColor ) ]
-    , h1 [] [ text ( String.fromInt model.age ) ]
+    [ h1 [] [ text ( "hairColor: " ++ model.hairColor ) ]
+    , h1 [] [ text ( "age: " ++ String.fromInt model.age ) ]
     , button [ onClick Roll ] [ text "Roll" ]
     ]

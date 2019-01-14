@@ -74,17 +74,17 @@ subscriptions model =
 view : Model -> Html Msg
 view model =
   div []
-    [ h2 [] [ text "Random Cats" ]
-    , viewGif model
+    [ h2 [] [ text "Random Girl" ]
+    , viewGirl model
     ]
 
 
-viewGif : Model -> Html Msg
-viewGif model =
+viewGirl : Model -> Html Msg
+viewGirl model =
   case model of
     Failure ->
       div []
-        [ text "I could not load a random cat for some reason. "
+        [ text "I could not load the names for some reason "
         , button [ onClick MorePlease ] [ text "Try Again!" ]
         ]
 
@@ -106,7 +106,7 @@ viewGif model =
 getRandomNames : Cmd Msg
 getRandomNames =
   Http.get
-    { url = "https://randomuser.me/api/?gender=female"
+    { url = "https:/localhost:8013/names.json"
     , expect = Http.expectJson GotName ( nameDecoder)
     }
 
