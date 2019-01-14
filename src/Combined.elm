@@ -21,10 +21,19 @@ main =
 
 init : () -> (Model, Cmd Msg)
 init _ =
-  (Loading, Random.generate NewGirl generatedPair)
+  (Model "" "" "" "" 0 Loading, Random.generate NewGirl generatedPair)
 
 
 -- MODEL
+
+type alias Model =
+  { firstName : String
+  , lastName : String
+  , hairColor : String
+  , eyeColor : String
+  , age : Int
+  , status: State
+  }
 
 type alias ManicPixieDG =
   { firstName : String
@@ -32,12 +41,13 @@ type alias ManicPixieDG =
   , hairColor : String
   , eyeColor : String
   , age : Int
+  , status: State
   }
 
-type Model
+type State
   = Failure
   | Loading
-  | Success ManicPixieDG
+  | Success
 
 
 -- UPDATE
@@ -74,8 +84,8 @@ nameDecoder =
       ( field "results" ( index 0 (field "name" (field "last" string))  ) )
 
 -- helper function to take in a Girl and Return a ManicPixieDG.
-returnMP : Girl -> ManicPixieDG
-returnMP gorl = ManicPixieDG gorl.firstName gorl.lastName "" "" 0
+returnMP : Girl -> Model -> ManicPixieDG
+returnMP gorl model = ManicPixieDG gorl.firstName gorl.lastName model.hairColor model.eyeColor model.age Success
 -- updateupdate
 
 
@@ -98,15 +108,15 @@ update msg model =
       in
         List.foldl chain (model, Cmd.batch []) msgs
     MorePlease ->
-      (Loading, getRandomNames)
+      ( {model | status = Loading}, getRandomNames)
 
     GotName result ->
       case result of
         Ok girl ->
-          (Success (returnMP girl), Cmd.none)
+          (returnMP girl model, Cmd.none)
 
         Err _ ->
-          (Failure, Cmd.none)
+          ( {model | status = Failure}, Cmd.none)
 
     Roll ->
       ( model
@@ -114,7 +124,7 @@ update msg model =
       )
 
     NewGirl twoNums ->
-      ( Success (ManicPixieDG "" "" ( extractColor (Tuple.first twoNums) possibleHairColors ) "" (Tuple.second twoNums) )
+      (  Model model.firstName model.lastName ( extractColor (Tuple.first twoNums) possibleHairColors ) "" (Tuple.second twoNums)  Success
       , getRandomNames
       )
 
@@ -131,7 +141,7 @@ view model =
 
 viewGirl : Model -> Html Msg
 viewGirl model =
-  case model of
+  case model.status of
     Failure ->
       div []
         [ text "I could not load the names for some reason "
@@ -141,14 +151,14 @@ viewGirl model =
     Loading ->
       text "Loading..."
 
-    Success girl ->
+    Success ->
       div []
         [ button [ onClick MorePlease, style "display" "block" ] [ text "More Please!" ]
-        , h1 [] [ text ( "hairColor: " ++ girl.hairColor ) ]
-        , h1 [] [ text ( "age: " ++ String.fromInt girl.age ) ]
-        , h2 [] [ text girl.firstName ]
-        , h2 [] [ text girl.lastName ]
-        , button [  onClick (ChainMsgs [MorePlease, Roll]) ] [ text "Roll" ]
+        , h1 [] [ text ( "hairColor: " ++ model.hairColor ) ]
+        , h1 [] [ text ( "age: " ++ String.fromInt model.age ) ]
+        , h2 [] [ text model.firstName ]
+        , h2 [] [ text model.lastName ]
+        , button [  onClick (ChainMsgs [Roll, MorePlease]) ] [ text "Roll" ]
         ]
 
 
