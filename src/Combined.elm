@@ -14,7 +14,7 @@ import Bootstrap.Card as Card
 import Bootstrap.ListGroup as ListGroup
 import Bootstrap.Button as Button
 -- MAIN
-
+import Drawing as Girl
 
 main =
     Browser.element
@@ -188,7 +188,8 @@ view model =    -- Responsive fixed width container
         [ CDN.stylesheet -- creates an inline style node with the Bootstrap CSS
         , Grid.row []
             [ Grid.col []
-                [ viewGirl model ]
+                [ Girl.drawing model.eyeColor model.hairColor
+                , viewGirl model ]
             ]
 
         ]
@@ -211,10 +212,7 @@ viewGirl model =
                 [ Card.config [ Card.outlinePrimary ]
                 |> Card.headerH4 [] [ text "Manic Pixie Dream Girl Generator" ]
                 |> Card.listGroup
-                    [ ListGroup.li [ ListGroup.success ] [ text ("hair color: " ++ model.hairColor)]
-                        , ListGroup.li [ ListGroup.info ] [ text ("eye color: " ++ model.eyeColor)  ]
-                        , ListGroup.li [ ListGroup.info ] [ text ("first name: " ++ model.firstName)  ]
-                        , ListGroup.li [ ListGroup.info ] [ text ("last name: " ++ model.lastName)  ]
+                    [ ListGroup.li [ ListGroup.success ] [ text ("name: " ++ model.firstName ++ " " ++ model.lastName)]
                         , ListGroup.li [ ListGroup.warning ] [ text ("age: " ++ String.fromInt model.age) ]
                     ]
                 |> Card.block []
