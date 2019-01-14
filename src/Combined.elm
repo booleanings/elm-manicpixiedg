@@ -27,7 +27,7 @@ main =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( Model "" "" "" "" 0 Loading, Random.generate SetFeatures generatedPair )
+    ( Model "" "" "" "" 0 "" Loading, Random.generate SetFeatures generatedPair )
 
 
 
@@ -40,6 +40,7 @@ type alias Model =
     , hairColor : String
     , eyeColor : String
     , age : Int
+    , firstWords : String
     , status : State
     }
 
@@ -82,6 +83,24 @@ generatedInt =
     Random.int 18 41
 
 
+-- getRandomNames Http get command
+
+
+getRandomQuote : Cmd Msg
+getRandomQuote =
+    Http.get
+        { url = "https://favqs.com/api/qotd"
+
+        -- { url = "http://localhost:8001/data/names.json"
+        , expect = Http.expectJson GotQuote quoteDecoder
+        }
+
+
+quoteDecoder : Decoder String
+quoteDecoder =
+    (field "quote" (field "body" string))
+
+
 
 -- getRandomNames Http get command
 
@@ -115,7 +134,7 @@ nameDecoder =
 
 returnMP : Girl -> Model -> Model
 returnMP gorl model =
-    Model gorl.firstName gorl.lastName model.hairColor model.eyeColor model.age Success
+    Model gorl.firstName gorl.lastName model.hairColor model.eyeColor model.age model.firstWords Success
 
 
 
@@ -129,6 +148,7 @@ type Msg
     | SetFeatures ( Int, Int )
     | SetAge Int
     | GotName (Result Http.Error Girl)
+    | GotQuote (Result Http.Error String)
     | ChainMsgs (List Msg)
 
 
@@ -152,7 +172,15 @@ update msg model =
         GotName result ->
             case result of
                 Ok girl ->
-                    ( returnMP girl model, Cmd.none )
+                    ( returnMP girl model, getRandomQuote )
+
+                Err _ ->
+                    ( { model | status = Failure }, Cmd.none )
+
+        GotQuote result ->
+            case result of
+                Ok quote ->
+                    ( {model | firstWords = quote}, Cmd.none )
 
                 Err _ ->
                     ( { model | status = Failure }, Cmd.none )
@@ -168,12 +196,12 @@ update msg model =
             )
 
         SetFeatures twoNums ->
-            ( Model model.firstName model.lastName (extractColor (Tuple.first twoNums) possibleHairColors) (extractColor (Tuple.second twoNums) possibleEyeColors) (Tuple.second twoNums) Success
+            ( Model model.firstName model.lastName (extractColor (Tuple.first twoNums) possibleHairColors) (extractColor (Tuple.second twoNums) possibleEyeColors) (Tuple.second twoNums) "" Success
             , getRandomNames
             )
 
         SetAge age ->
-            ( Model model.firstName model.lastName model.hairColor model.eyeColor age Success
+            ( Model model.firstName model.lastName model.hairColor model.eyeColor age "" Success
             , getRandomNames
             )
 
@@ -188,8 +216,7 @@ view model =    -- Responsive fixed width container
         [ CDN.stylesheet -- creates an inline style node with the Bootstrap CSS
         , Grid.row []
             [ Grid.col []
-                [ Girl.drawing model.eyeColor model.hairColor
-                , viewGirl model ]
+                [ viewGirl model ]
             ]
 
         ]
@@ -213,10 +240,12 @@ viewGirl model =
                 |> Card.headerH4 [] [ text "Manic Pixie Dream Girl Generator" ]
                 |> Card.listGroup
                     [ ListGroup.li [ ListGroup.success ] [ text ("name: " ++ model.firstName ++ " " ++ model.lastName)]
+                        , ListGroup.li [ ListGroup.warning ] [ text ("first words: " ++ model.firstWords) ] 
                         , ListGroup.li [ ListGroup.warning ] [ text ("age: " ++ String.fromInt model.age) ]
                     ]
                 |> Card.block []
-                    [ Block.custom <|
+                    [ Block.text [] [ Girl.drawing model.eyeColor model.hairColor]
+                      , Block.custom <|
                         Button.linkButton
                             [ Button.primary, Button.attrs [ onClick (ChainMsgs [ RollAge, RollFeatures, MorePlease ]) ]]
                             [ text "Roll" ]
