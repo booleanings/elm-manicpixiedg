@@ -9,6 +9,7 @@ import Json.Decode exposing (Decoder, field, index, list, map2, string)
 import Random
 import Bootstrap.CDN as CDN
 import Bootstrap.Grid as Grid
+import Bootstrap.Grid.Col as Col
 import Bootstrap.Card.Block as Block
 import Bootstrap.Card as Card
 import Bootstrap.ListGroup as ListGroup
@@ -238,14 +239,33 @@ viewGirl model =
             div []
                 [ Card.config [ Card.outlinePrimary ]
                 |> Card.headerH4 [] [ text "Manic Pixie Dream Girl Generator" ]
-                |> Card.listGroup
-                    [ ListGroup.li [ ListGroup.success ] [ text ("name: " ++ model.firstName ++ " " ++ model.lastName)]
-                        , ListGroup.li [ ListGroup.warning ] [ text ("first words: " ++ model.firstWords) ] 
-                        , ListGroup.li [ ListGroup.warning ] [ text ("age: " ++ String.fromInt model.age) ]
-                    ]
                 |> Card.block []
-                    [ Block.text [] [ Girl.drawing model.eyeColor model.hairColor]
-                      , Block.custom <|
+            [Block.custom <|
+            Grid.containerFluid []
+                [ Grid.row []
+                    [ Grid.col
+                        [ Col.xs, Col.md8 ]
+                        [ text ("name: " ++ model.firstName ++ " " ++ model.lastName)
+                        , br [] []
+                        , text ("age: " ++ String.fromInt model.age)]
+                    , Grid.col
+                        [ Col.xs6, Col.md4 ]
+                        [ Girl.drawing model.eyeColor model.hairColor]
+                    ]
+                ]
+            ]
+                |> Card.listGroup
+                    [ ListGroup.li [ ListGroup.warning ] [ text ("first words: " ++ model.firstWords) ]]
+                    -- [
+                    --     Grid.container []
+                    --         [ Grid.row []
+                    --          [ Grid.col [ Col.sm8 ] [ text "col-sm-8" ]
+                    --          , Grid.col [ Col.sm4] [ text "col-sm-4" ]
+                    --           ]
+                    --         ]
+                    -- ]
+                |> Card.block []
+                    [ Block.custom <|
                         Button.linkButton
                             [ Button.primary, Button.attrs [ onClick (ChainMsgs [ RollAge, RollFeatures, MorePlease ]) ]]
                             [ text "Roll" ]
