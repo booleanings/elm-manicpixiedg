@@ -17,7 +17,6 @@ import Bootstrap.Button as Button
 import RandomUtils exposing (..)
 import GirlDrawing as GirlDrawing
 import Rest exposing (Girl, Msg(..), getRandomNames, getRandomQuote, nameDecoder)
-
 main =
     Browser.element
         { init = init
@@ -100,16 +99,16 @@ update msg model =
 
         RollFeatures ->
             ( model
-            , Random.generate SetFeatures generatedPair
+            , Random.generate SetAge generatedInt
             )
 
         RollAge ->
             ( model
-            , Random.generate SetAge generatedInt
+            , Random.generate SetFeatures generatedPair 
             )
 
         SetFeatures twoNums ->
-            ( Model model.firstName model.lastName (extractColor (Tuple.first twoNums) possibleHairColors) (extractColor (Tuple.second twoNums) possibleEyeColors) (Tuple.second twoNums) "" model.city model.state Success
+            ( Model model.firstName model.lastName (extractColor (Tuple.first twoNums) possibleHairColors) (extractColor (Tuple.second twoNums) possibleEyeColors) model.age "" model.city model.state Success
             , getRandomNames
             )
 
@@ -125,7 +124,7 @@ update msg model =
 
 view : Model -> Html Msg
 view model =    -- Responsive fixed width container
-        Grid.container []
+        Grid.container [style "padding" "3%"]
         [ CDN.stylesheet -- creates an inline style node with the Bootstrap CSS
         , Grid.row []
             [ Grid.col []
@@ -157,19 +156,21 @@ viewGirl model =
                 [ Grid.row []
                     [ Grid.col
                         [  ]
-                        [ h1 [style "font-family" "Rubik"] [text ("name: " ++ model.firstName ++ " " ++ model.lastName)]
+                        [ h1 [style "font-family" "monospace"] [text (model.firstName ++ " " ++ model.lastName)]
                         , br [] []
-                        , text ("age: " ++ String.fromInt model.age)
+                        , text ("She is ")
+                        , strong [] [text (String.fromInt model.age)]
+                        , text (" years old.")
                         , br [] []
                         , text ("location: " ++ model.city ++ ", " ++ model.state)]
                     , Grid.col
-                        [ ]
-                        [ GirlDrawing.drawing model.eyeColor model.hairColor]
+                        [  ]
+                        [ div [style "padding-top" "1%", style "border" "2px solid black", style "border-radius" "10px" ] [GirlDrawing.drawing model.eyeColor model.hairColor]]
                     ]
                 ]
             ]
                 |> Card.listGroup
-                    [ ListGroup.li [ ListGroup.warning ] [ text ("first words: " ++ model.firstWords) ]]
+                    [ ListGroup.li [ ListGroup.warning ] [ h4 [style "font-family" "cursive"] [text ("first words: " ++ model.firstWords)] ]]
                 |> Card.block []
                     [ Block.custom <|
                         Button.linkButton

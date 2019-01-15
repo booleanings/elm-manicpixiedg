@@ -7,7 +7,7 @@ possibleHairColors =
 
 
 possibleEyeColors =
-    [ "black", "brown", "hazel", "green", "blue" ]
+    [ "brown", "hazel", "green", "blue"]
 
 
 extractColor pos list =
