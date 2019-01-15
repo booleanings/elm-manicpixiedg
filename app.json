@@ -1,0 +1,13 @@
+
+{
+    "name": "Elm Manic Pixie Dream Girl Generator",
+    "repository": "https://github.com/booleanings/elm-manicpixiedg",
+    "env": {
+        "ELM_COMPILE": "elm make ./src/Combined.elm ./src/Rest.elm ./src/RandomUtils.elm ./src/GirlDrawing.elm --output elm.js"
+    },
+    "buildpacks": [
+        {
+            "url": "https://github.com/drync/heroku-buildpack-elm"
+        }
+    ]
+}

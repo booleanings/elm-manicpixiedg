@@ -1,155 +1,188 @@
+module Combined exposing (Model, State(..), init, main, returnMP, subscriptions, update, view, viewGirl)
+
 import Browser
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Http
-import Json.Decode exposing (Decoder, field, string, index, list, map2)
+import Json.Decode exposing (Decoder, field, index, list, map2, string)
 import Random
-
-
-
--- MAIN
-
-
+import Bootstrap.CDN as CDN
+import Bootstrap.Grid as Grid
+import Bootstrap.Grid.Col as Col
+import Bootstrap.Card.Block as Block
+import Bootstrap.Card as Card
+import Bootstrap.ListGroup as ListGroup
+import Bootstrap.Button as Button
+import RandomUtils exposing (..)
+import GirlDrawing as GirlDrawing
+import Rest exposing (Girl, Msg(..), getRandomNames, getRandomQuote, nameDecoder)
 main =
-  Browser.element
-    { init = init
-    , update = update
-    , subscriptions = subscriptions
-    , view = view
-    }
+    Browser.element
+        { init = init
+        , update = update
+        , subscriptions = subscriptions
+        , view = view
+        }
 
-init : () -> (Model, Cmd Msg)
+
+init : () -> ( Model, Cmd Msg )
 init _ =
-  (Loading, Random.generate NewGirl generatedPair)
+    ( Model "" "" "" "" 0 "" "" "" "" Loading, Random.generate SetFeatures generatedPair )
+
 
 
 -- MODEL
 
-type alias ManicPixieDG =
-  { firstName : String
-  , lastName : String
-  , hairColor : String
-  , eyeColor : String
-  , age : Int
-  }
 
-type Model
-  = Failure
-  | Loading
-  | Success ManicPixieDG
-
-
--- UPDATE
-
--- color picker helper
-possibleHairColors = ["blue", "pink", "red", "green"]
-possibleEyeColors = ["black", "brown", "hazel", "green", "blue"]
-extractColor pos list =
-    Maybe.withDefault "black" ( List.head ( List.drop (pos-1) ( List.take (pos) list ) )) -- -> "black"
-
--- random generated helper
-generatedPair : Random.Generator (Int, Int)
-generatedPair =
-      Random.pair (Random.int 1 4) (Random.int 18 41)
-
--- getRandomNames Http get command
-getRandomNames : Cmd Msg
-getRandomNames =
-  Http.get
-    { url = "https://randomuser.me/api/?gender=female"
-    -- { url = "http://localhost:8001/data/names.json"
-    , expect = Http.expectJson GotName ( nameDecoder)
+type alias Model =
+    { firstName : String
+    , lastName : String
+    , hairColor : String
+    , eyeColor : String
+    , age : Int
+    , firstWords : String
+    , hobbies : String
+    , city : String
+    , state : String
+    , status : State
     }
 
-type alias Girl =
-  { firstName : String
-  , lastName : String
-  }
 
-nameDecoder : Decoder Girl
-nameDecoder =
-  map2 Girl
-      ( field "results" ( index 0 (field "name" (field "first" string))  ) )
-      ( field "results" ( index 0 (field "name" (field "last" string))  ) )
+type State
+    = Failure
+    | Loading
+    | Success
 
--- helper function to take in a Girl and Return a ManicPixieDG.
-returnMP : Girl -> ManicPixieDG
-returnMP gorl = ManicPixieDG gorl.firstName gorl.lastName "" "" 0
+
+
+
+returnMP : Rest.Girl -> Model -> Model
+returnMP gorl model =
+    Model gorl.firstName gorl.lastName model.hairColor model.eyeColor model.age model.firstWords model.hobbies gorl.city gorl.state Success
+
+
+
+
 -- updateupdate
-
-
-
-type Msg
-  = MorePlease
-  | Roll
-  | NewGirl (Int, Int)
-  | GotName (Result Http.Error Girl)
-  | ChainMsgs (List Msg)
-
-update : Msg -> Model -> (Model, Cmd Msg)
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-  case msg of
-    ChainMsgs msgs ->
-      let
-        chain msg1 (model1, cmds) =
-          let (model2, cmds1) = update msg1 model1
-          in (model, Cmd.batch [cmds, cmds1])
-      in
-        List.foldl chain (model, Cmd.batch []) msgs
-    MorePlease ->
-      (Loading, getRandomNames)
+    case msg of
+        ChainMsgs msgs ->
+            let
+                chain msg1 ( model1, cmds ) =
+                    let
+                        ( model2, cmds1 ) =
+                            update msg1 model1
+                    in
+                    ( model, Cmd.batch [ cmds, cmds1 ] )
+            in
+            List.foldl chain ( model, Cmd.batch [] ) msgs
 
-    GotName result ->
-      case result of
-        Ok girl ->
-          (Success (returnMP girl), Cmd.none)
+        MorePlease ->
+            ( { model | status = Loading }, getRandomNames )
 
-        Err _ ->
-          (Failure, Cmd.none)
+        GotName result ->
+            case result of
+                Ok girl ->
+                    ( returnMP girl model, getRandomQuote )
 
-    Roll ->
-      ( model
-      , Random.generate NewGirl generatedPair
-      )
+                Err _ ->
+                    ( { model | status = Failure }, Cmd.none )
 
-    NewGirl twoNums ->
-      ( Success (ManicPixieDG "" "" ( extractColor (Tuple.first twoNums) possibleHairColors ) "" (Tuple.second twoNums) )
-      , getRandomNames
-      )
+        GotQuote result ->
+            case result of
+                Ok quote ->
+                    ( {model | firstWords = quote}, Cmd.none )
+
+                Err _ ->
+                    ( { model | status = Failure }, Cmd.none )
+
+        RollFeatures ->
+            ( model
+            , Random.generate SetAge generatedPair2
+            )
+
+        RollAgeHobbies ->
+            ( model
+            , Random.generate SetFeatures generatedPair 
+            )
+
+        SetFeatures twoNums ->
+            ( Model model.firstName model.lastName (extractFeature (Tuple.first twoNums) possibleHairColors) (extractFeature (Tuple.second twoNums) possibleEyeColors) model.age "" model.hobbies model.city model.state Success
+            , getRandomNames
+            )
+
+        SetAge twoNums ->
+            ( Model model.firstName model.lastName model.hairColor model.eyeColor (Tuple.second twoNums) "" (extractFeature (Tuple.first twoNums) possibleHobbies) model.city model.state Success
+            , getRandomNames
+            )
+
+
 
 -- VIEW
 
 
 view : Model -> Html Msg
-view model =
-  div []
-    [ h2 [] [ text "Random Cats" ]
-    , viewGirl model
-    ]
+view model =    -- Responsive fixed width container
+        Grid.container [style "padding" "3%"]
+        [ CDN.stylesheet -- creates an inline style node with the Bootstrap CSS
+        , Grid.row []
+            [ Grid.col []
+                [ viewGirl model ]
+            ]
+
+        ]
 
 
 viewGirl : Model -> Html Msg
 viewGirl model =
-  case model of
-    Failure ->
-      div []
-        [ text "I could not load the names for some reason "
-        , button [ onClick MorePlease ] [ text "Try Again!" ]
-        ]
+    case model.status of
+        Failure ->
+            div []
+                [ text "I could not load the names for some reason "
+                , button [ onClick MorePlease ] [ text "Try Again!" ]
+                ]
 
-    Loading ->
-      text "Loading..."
+        Loading ->
+            text "Loading..."
 
-    Success girl ->
-      div []
-        [ button [ onClick MorePlease, style "display" "block" ] [ text "More Please!" ]
-        , h1 [] [ text ( "hairColor: " ++ girl.hairColor ) ]
-        , h1 [] [ text ( "age: " ++ String.fromInt girl.age ) ]
-        , h2 [] [ text girl.firstName ]
-        , h2 [] [ text girl.lastName ]
-        , button [  onClick (ChainMsgs [MorePlease, Roll]) ] [ text "Roll" ]
-        ]
+        Success ->
+            div []
+                [ Card.config [ Card.outlinePrimary ]
+                |> Card.headerH4 [] [ text "Manic Pixie Dream Girl Generator" ]
+                |> Card.block []
+            [Block.custom <|
+            Grid.containerFluid []
+                [ Grid.row []
+                    [ Grid.col
+                        [  ]
+                        [ h1 [style "font-family" "monospace"] [text (model.firstName ++ " " ++ model.lastName)]
+                        , br [] []
+                        , text ("She is ")
+                        , strong [] [text (String.fromInt model.age)]
+                        , text (" years old.")
+                        , br [] []
+                        , text ("location: " ++ model.city ++ ", " ++ model.state)
+                        , br [] []
+                        , text ("hobbies: " ++ model.hobbies)]
+                    , Grid.col
+                        [  ]
+                        [ div [style "padding-top" "1%", style "border" "2px solid black", style "border-radius" "10px" ] [GirlDrawing.drawing model.eyeColor model.hairColor]]
+                    ]
+                ]
+            ]
+                |> Card.listGroup
+                    [ ListGroup.li [ ListGroup.warning ] [ h4 [style "font-family" "cursive"] [text ("first words: " ++ model.firstWords)] ]]
+                |> Card.block []
+                    [ Block.custom <|
+                        Button.linkButton
+                            [ Button.primary, Button.attrs [ onClick (ChainMsgs [ RollAgeHobbies, RollFeatures, MorePlease ]) ]]
+                            [ text "Roll" ]
+                    ]
+                |> Card.view
+                ]
+
 
 
 -- SUBSCRIPTIONS
@@ -157,4 +190,4 @@ viewGirl model =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-  Sub.none
+    Sub.none

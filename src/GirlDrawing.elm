@@ -1,0 +1,7 @@
+module GirlDrawing exposing (drawing)
+import Svg exposing (..)
+import Svg.Attributes exposing (..)
+
+
+drawing eyeColor hairColor =
+    svg [ width "580", height "400" ] [ g [] [ rect [ fill "#fff", id "canvas_background", height "402", width "582", y "-1", x "-1" ] [], g [ display "none", id "canvasGrid" ] [ rect [ fill "url(#gridpattern)", strokeWidth "0", y "0", x "0", height "100%", width "100%", id "svg_1" ] [] ] ], g [] [ ellipse [ fill hairColor, stroke "#000", strokeWidth "1.5", cx "289.5", cy "211.45", id "svg_4", rx "127.5", ry "159" ] [], ellipse [ fill "#fff", stroke "#000", strokeWidth "1.5", cx "290", cy "191.45", id "svg_2", rx "124", ry "121" ] [], ellipse [ fill hairColor, stroke "#000", strokeWidth "1.5", cx "289", cy "126.95", id "svg_5", rx "102", ry "58.5" ] [], line [ fill "none", stroke "#000", strokeWidth "1.5", strokeOpacity "null", fillOpacity "null", x1 "208", y1 "268.4499", x2 "381", y2 "235.4499", id "svg_7", strokeLinejoin "null", strokeLinecap "null" ] [], ellipse [ fill eyeColor, stroke "#000", strokeWidth "1.5", cx "223.5", cy "190.45001", id "svg_8", rx "11.5", ry "12" ] [], ellipse [ fill eyeColor, stroke "#000", strokeWidth "1.5", cx "343.5", cy "191.45001", id "svg_10", rx "11.5", ry "12" ] [] ] ]
