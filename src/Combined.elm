@@ -28,7 +28,7 @@ main =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( Model "" "" "" "" 0 "" "" "" Loading, Random.generate SetFeatures generatedPair )
+    ( Model "" "" "" "" 0 "" "" "" "" Loading, Random.generate SetFeatures generatedPair )
 
 
 
@@ -42,6 +42,7 @@ type alias Model =
     , eyeColor : String
     , age : Int
     , firstWords : String
+    , hobbies : String
     , city : String
     , state : String
     , status : State
@@ -58,7 +59,7 @@ type State
 
 returnMP : Rest.Girl -> Model -> Model
 returnMP gorl model =
-    Model gorl.firstName gorl.lastName model.hairColor model.eyeColor model.age model.firstWords gorl.city gorl.state Success
+    Model gorl.firstName gorl.lastName model.hairColor model.eyeColor model.age model.firstWords model.hobbies gorl.city gorl.state Success
 
 
 
@@ -99,21 +100,21 @@ update msg model =
 
         RollFeatures ->
             ( model
-            , Random.generate SetAge generatedInt
+            , Random.generate SetAge generatedPair2
             )
 
-        RollAge ->
+        RollAgeHobbies ->
             ( model
             , Random.generate SetFeatures generatedPair 
             )
 
         SetFeatures twoNums ->
-            ( Model model.firstName model.lastName (extractColor (Tuple.first twoNums) possibleHairColors) (extractColor (Tuple.second twoNums) possibleEyeColors) model.age "" model.city model.state Success
+            ( Model model.firstName model.lastName (extractFeature (Tuple.first twoNums) possibleHairColors) (extractFeature (Tuple.second twoNums) possibleEyeColors) model.age "" model.hobbies model.city model.state Success
             , getRandomNames
             )
 
-        SetAge age ->
-            ( Model model.firstName model.lastName model.hairColor model.eyeColor age "" model.city model.state Success
+        SetAge twoNums ->
+            ( Model model.firstName model.lastName model.hairColor model.eyeColor (Tuple.second twoNums) "" (extractFeature (Tuple.first twoNums) possibleHobbies) model.city model.state Success
             , getRandomNames
             )
 
@@ -162,7 +163,9 @@ viewGirl model =
                         , strong [] [text (String.fromInt model.age)]
                         , text (" years old.")
                         , br [] []
-                        , text ("location: " ++ model.city ++ ", " ++ model.state)]
+                        , text ("location: " ++ model.city ++ ", " ++ model.state)
+                        , br [] []
+                        , text ("hobbies: " ++ model.hobbies)]
                     , Grid.col
                         [  ]
                         [ div [style "padding-top" "1%", style "border" "2px solid black", style "border-radius" "10px" ] [GirlDrawing.drawing model.eyeColor model.hairColor]]
@@ -174,7 +177,7 @@ viewGirl model =
                 |> Card.block []
                     [ Block.custom <|
                         Button.linkButton
-                            [ Button.primary, Button.attrs [ onClick (ChainMsgs [ RollAge, RollFeatures, MorePlease ]) ]]
+                            [ Button.primary, Button.attrs [ onClick (ChainMsgs [ RollAgeHobbies, RollFeatures, MorePlease ]) ]]
                             [ text "Roll" ]
                     ]
                 |> Card.view

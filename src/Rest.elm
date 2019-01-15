@@ -9,9 +9,9 @@ import Json.Decode exposing (Decoder, field, index, list, map4, string)
 type Msg
     = MorePlease
     | RollFeatures
-    | RollAge
+    | RollAgeHobbies 
     | SetFeatures ( Int, Int )
-    | SetAge Int
+    | SetAge ( Int, Int )
     | GotName (Result Http.Error Girl)
     | GotQuote (Result Http.Error String)
     | ChainMsgs (List Msg)
