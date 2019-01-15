@@ -1,10 +1,12 @@
 ﻿# Manic Pixie Dream Girl Generator
+![manic pixie image](https://img0.etsystatic.com/027/0/8102692/il_570xN.545970116_kb09.jpg)
 ## So wtf is this...
 Well according to Wikipedia, a Manic Pixie Dream Girl is defined as 
 >stock character type in films. Film critic Nathan Rabin, who coined the term after observing Kirsten Dunst's character in Elizabethtown (2005), said that the MPDG "exists solely in the fevered imaginations of sensitive writer-directors to teach broodingly soulful young men to embrace life and its infinite mysteries and adventures."[1] MPDGs are said to help their men without pursuing their own happiness, and such characters never grow up; thus, their men never grow up.[2]
 
 ## Why
 It was a coincidence that I started learning Elm shortly after watching Scott Pilgrim vs The World and my love for Ramona Flowers was still fresh. I was inspired to make this tool as my first project in Elm. 
+
 
 It uses the `elm/http`, `elm/svg`, `elm/random`, and `elm-bootstrap` packages. It also makes API calls to generate the name and location of the MPDG.
 
