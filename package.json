@@ -1,0 +1,22 @@
+{
+  "name": "mpdg",
+  "version": "1.0.0",
+  "description": "manic pixie dream girl generator using elm",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/booleanings/elm-practice-app.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/booleanings/elm-practice-app/issues"
+  },
+  "homepage": "https://github.com/booleanings/elm-practice-app#readme",
+  "dependencies": {
+    "elm": "^0.19.0-bugfix2"
+  }
+}
